@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ジムゲーム"><meta name="theme-color" content="#fff3f8"><meta name="robots" content="noindex,nofollow">
+<title>ジム習慣ゲーム</title>
+<style>
+:root{color-scheme:light dark;--bg:#fff3f8;--card:#fff;--tx:#4a3b47;--mut:#9a8a96;--pk:#ff9ec4;--bl:#a5d4ff;--gr:#a8e6cf;--bd:#f3d9e6;--warn:#fff1c9;--cardt:rgba(255,255,255,.52);--cardh:rgba(255,255,255,.5);--bgd:rgba(255,243,248,.5);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#2a2230;--card:#3a2f42;--tx:#f5e9f1;--mut:#b9a8b4;--bd:#54445e;--warn:#5a4a22;--pk:#d9709c;--bl:#5a8fc0;--gr:#4f9a80;--cardt:rgba(58,47,66,.5);--cardh:rgba(58,47,66,.5);--bgd:rgba(42,34,48,.55)}}
+:root[data-theme="dark"]{--bg:#2a2230;--card:#3a2f42;--tx:#f5e9f1;--mut:#b9a8b4;--bd:#54445e;--warn:#5a4a22;--pk:#d9709c;--bl:#5a8fc0;--gr:#4f9a80;--cardt:rgba(58,47,66,.5);--cardh:rgba(58,47,66,.5);--bgd:rgba(42,34,48,.55)}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 "Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;padding-bottom:84px}
+#app{max-width:520px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:4px 0 12px}h2{font-size:16px;margin:0 0 8px}
+.card{background:var(--card);border:2px solid var(--bd);border-radius:20px;padding:14px;margin-bottom:12px}
+.big{font-size:30px;font-weight:800}.mut{color:var(--mut);font-size:13px}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.warn{background:var(--warn);border-radius:14px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+button{font:inherit;border:0;border-radius:16px;padding:12px 14px;background:var(--pk);color:#3a2433;font-weight:700;min-height:46px}
+button.sub{background:var(--bl)}button.gr{background:var(--gr)}button.line{background:transparent;border:2px solid var(--bd);color:var(--tx)}
+textarea{width:100%;height:150px;border:2px solid var(--bd);border-radius:14px;padding:10px;font:13px/1.4 ui-monospace,monospace;background:var(--bg);color:var(--tx)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:2px solid var(--bd)}
+nav button{flex:1;padding:8px 1px;font-size:10.5px;background:transparent;color:var(--mut);min-height:48px}
+nav button.on{background:var(--pk);color:#3a2433}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center}
+.grid b{font-size:12px;color:var(--mut)}
+.d{padding:0;min-height:44px;background:var(--bg);color:var(--tx);border-radius:12px;font-weight:600}
+.d.g{background:var(--pk);color:#3a2433}.d.o{background:var(--bl);color:#1f2f40}.d.s{outline:3px solid var(--tx)}
+.leg{display:flex;gap:12px;font-size:12px;margin-top:8px;color:var(--mut)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:6px;vertical-align:-1px;margin-right:4px}
+.rec{border-top:1px dashed var(--bd);padding:8px 0}
+.toast{background:var(--gr);color:#1f3a2e;border-radius:14px;padding:10px 12px;margin-bottom:12px;font-weight:700}
+.ok{color:#2e9b6a}.ng{color:#d0485f}
+.bgm .card,.bgm .warn,.bgm .toast{background:var(--cardh);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.bgs .card,.bgs .warn{background:var(--cardt);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.bgm h1,.bgs h1{display:inline-block;background:var(--cardt);padding:2px 14px;border-radius:14px}
+.bgm .mut,.bgs .mut{color:var(--tx);opacity:.78}
+.bgm .mny{display:none}
+.bgm .card,.bgm .warn,.bgs .card,.bgs .warn{border-color:rgba(255,255,255,.3)}
+:root{--A:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 86px)}
+@supports (height:100svh){:root{--A:calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 86px)}}
+</style></head><body><div id="app"></div>
+<nav id="nav"></nav>
+<input type="file" id="fm" accept="image/*" multiple style="display:none" onchange="const a=[...this.files];this.value='';addFiles(a)">
+<input type="file" id="f1" accept="image/*" style="display:none" onchange="const a=[...this.files];this.value='';addFiles(a,tgt)">
+<input type="file" id="fp" accept="image/*" style="display:none" onchange="const a=[...this.files];this.value='';pfImgSet(a[0])">
+<input type="file" id="fb" accept="image/*" style="display:none" onchange="const a=[...this.files];this.value='';bnSet(a[0])">
+<input type="file" id="fr" accept="image/*" multiple style="display:none" onchange="const a=[...this.files];this.value='';addRooms(a)">
+<script>
+const BNR={ch:'',it:''};
+const K='gymgame_v1',MS={3:3000,5:5000,8:18000,10:10000},LB={3:50,5:100,7:200},BM2=1.54*1.54,SWIM=/水泳|スイミング|プール|アクア|水中|泳/,STR=/筋トレ|筋力|ウェイト|ダンベル|バーベル|スクワット|ベンチプレス|デッドリフト|レッグプレス|ラットプル|チェストプレス|腕立て|腹筋|懸垂/;
+const dayD=k=>(S.weights[k]!=null?10:0)+((S.daily[k]||{}).s?20:0)+((S.daily[k]||{}).e?30:0);
+let S=null,stOK=true,loadErr='',tab='home',toast='',pending=null,restoreData=null,sel=null,msgTxt='';
+let now=new Date();const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+let cm=ymd(now).slice(0,7);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const yen=n=>n.toLocaleString('ja-JP')+'円',pts=n=>n.toLocaleString('ja-JP')+'pt';
+function load(){let raw=null;try{raw=localStorage.getItem(K)}catch(e){stOK=false}
+ if(raw){try{S=JSON.parse(raw)}catch(e){S=null;loadErr='保存データを読み込めませんでした。壊れたデータは別の枠に退避したので、バックアップがあれば「保存」タブから復元してください。';try{localStorage.setItem(K+'_corrupt',raw)}catch(e2){}}}
+ if(!S||typeof S!=='object'||Array.isArray(S))S={v:1,gen:2,records:{},spend:{yen:0,pt:0},tickets:0,lastBackup:null};norm();
+ try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}}
+function norm(){if(!S.records||typeof S.records!=='object'||Array.isArray(S.records))S.records={};S.login=S.login&&Array.isArray(S.login.dates)?{dates:S.login.dates}:{dates:[]};S.spend=S.spend&&typeof S.spend==='object'?S.spend:{yen:0,pt:0};S.spend.yen=+S.spend.yen||0;S.spend.pt=+S.spend.pt||0;S.spend.tickets=S.spend.tickets||0;S.tickets=S.tickets||0;S.owned=S.owned||{};S.shop=S.shop&&S.shop.products?S.shop:{products:{},seq:0};S.shop.seq=S.shop.seq||0;S.rooms=S.rooms&&Array.isArray(S.rooms.list)?S.rooms:{list:[],seq:0,sel:null};S.rooms.seq=S.rooms.seq||0;S.weights=S.weights||{};S.daily=S.daily||{};for(const k in S.owned){const m=/^CH(\d+)$/.exec(k);if(m&&CH[m[1]-1])S.owned[k].n=chFull(m[1]-1)}delete S.missions}
+function save(){try{localStorage.setItem(K,JSON.stringify(S));stOK=true}catch(e){stOK=false}}
+// 残高は「運動記録」から毎回計算(編集・削除しても矛盾しない)
+function calc(recs){
+ const days={};
+ for(const r of Object.values(recs)){if(!r||!Array.isArray(r.activities)||!/^\d{4}-\d{2}-\d{2}$/.test(r.date||''))continue;const d=days[r.date]=days[r.date]||{gym:false,gm:0,pt:0,recs:[]};
+  d.recs.push(r);if(r.gym){d.gym=true;d.gm+=r.gymMinutes||0}
+  for(const a of r.activities)d.pt+=(+a.mets||0)*(+a.minutes||0)}
+ let y=0,p=0;const month={};
+ Object.keys(days).sort().forEach(k=>{const d=days[k];d.pt=Math.floor(d.pt+1e-9);p+=d.pt;d.yen=0;
+  if(d.gym){const m=k.slice(0,7);month[m]=(month[m]||0)+1;const n=month[m];d.n=n;
+   d.yen=Math.min(d.gm,120)*25+2500+500+(MS[n]||0)}
+  y+=d.yen});
+ let tk=S.tickets,mp=0;const weeks={};
+ const wk=k=>{const[a,b,c]=k.split('-').map(Number),t=new Date(a,b-1,c);t.setDate(t.getDate()-(t.getDay()+6)%7);return ymd(t)};
+ for(const k of Object.keys(days)){const d=days[k];d.min=d.recs.reduce((s,r)=>s+r.activities.reduce((u,x)=>u+x.minutes,0),0);
+  d.mpt=dayD(k);d.sw=d.recs.some(r=>r.activities.some(a=>SWIM.test(a.name||'')));d.st=d.recs.some(r=>r.activities.some(a=>STR.test(a.name||'')));
+  const w=weeks[wk(k)]=weeks[wk(k)]||{ex:0,gym:0,sw:0,st:0};w.ex++;if(d.gym)w.gym++;if(d.sw)w.sw++;if(d.st)w.st++}
+ for(const w of Object.values(weeks)){w.pt=(w.gym>=2?150:0)+(w.sw>=1?100:0)+(w.st>=1?100:0);w.tk=w.ex>=3?5:0;mp+=w.pt;tk+=w.tk}
+ for(const k of new Set([...Object.keys(S.daily),...Object.keys(S.weights)]))mp+=dayD(k);const L=S.login.dates.length;let lp=0;for(let i=1;i<=L;i++){const q=(i-1)%7+1;lp+=20+(LB[q]||0);if(q===7)tk+=5}
+ return{days,weeks,wk,yen:y-S.spend.yen,pt:p+mp+lp-S.spend.pt,tickets:tk-S.spend.tickets,mp,lp,month}}
+function chk(r){
+ if(!r||typeof r!=='object')return'記録の形式が違います';
+ if(!r.id||typeof r.id!=='string')return'id がありません';
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(r.date||''))return r.id+': date は 2026-11-20 の形式にしてください';
+ if(isNaN(new Date(r.date+'T00:00:00'))||ymd(new Date(r.date+'T00:00:00'))!==r.date)return r.id+': date が実在しない日付です';
+ if(!Array.isArray(r.activities)||!r.activities.length)return r.id+': activities がありません';
+ for(const a of r.activities){if(!(a.minutes>0)||!(a.mets>0))return r.id+': minutes と mets は0より大きい数字にしてください'}
+ if(r.gym&&!(r.gymMinutes>=0))r.gymMinutes=r.activities.reduce((s,a)=>s+a.minutes,0);
+ return null}
+function sample(){return JSON.stringify({records:[{id:ymd(now).replace(/-/g,'')+'-1',date:ymd(now),gym:true,gymMinutes:45,activities:[{name:'ジム 有酸素',minutes:25,mets:5},{name:'筋トレ',minutes:20,mets:3.5}]},{id:ymd(now).replace(/-/g,'')+'-2',date:ymd(now),gym:false,activities:[{name:'ウォーキング',minutes:20,mets:3}]}]},null,1)}
+function doPrev(){
+ let j;try{j=JSON.parse($('#imp').value)}catch(e){return setPv('<div class="card ng">JSONの形式が正しくありません。ChatGPTの出力をそのまま貼ってください。</div>')}
+ const arr=Array.isArray(j)?j:j.records?j.records:[j];const bad=[],list=[];
+ for(const r of arr){const e=chk(r);e?bad.push(e):list.push(r)}
+ if(bad.length)return setPv('<div class="card ng">取り込めません:<br>'+bad.map(esc).join('<br>')+'</div>');
+ const merged={...S.records};let h='',nw=0;pending=[];
+ for(const r of list){const o=S.records[r.id];
+  if(o&&JSON.stringify(o)===JSON.stringify(r)){h+=`<div class="rec mut">取り込み済み(スキップ): ${esc(r.id)}</div>`;continue}
+  merged[r.id]=r;pending.push(r);nw++;
+  h+=`<div class="rec">${o?'更新':'新規'} ${esc(r.date)} ${r.gym?'ジム'+r.gymMinutes+'分':'ジム以外'}<br><span class="mut">${r.activities.map(a=>esc(a.name||'運動')+a.minutes+'分(METs '+a.mets+')').join(' / ')}</span></div>`}
+ const b=calc(S.records),a=calc(merged);
+ h=`<div class="card"><h2>取り込みプレビュー</h2>${h}<p>お給料 ${yen(b.yen)} → <b>${yen(a.yen)}</b>(${a.yen-b.yen>=0?'+':''}${(a.yen-b.yen).toLocaleString()})<br>ポイント ${pts(b.pt)} → <b>${pts(a.pt)}</b>(${a.pt-b.pt>=0?'+':''}${(a.pt-b.pt).toLocaleString()}・ミッション報酬を含む)<br>ガチャ券 ${b.tickets}枚 → <b>${a.tickets}枚</b></p>${nw?'<button class="gr" style="width:100%" onclick="doImp()">この内容で確定する</button>':'<p class="mut">新しく取り込む記録はありません。</p>'}</div>`;
+ setPv(h)}
+function setPv(h){$('#pv').innerHTML=h}
+function doImp(){if(!pending||!pending.length)return;
+ const bk=JSON.stringify(S);for(const r of pending)S.records[r.id]=r;save();pending=null;
+ toast=stOK?'取り込みました!':'';tab='home';R()}
+function del(id){S.records[id]&&(delete S.records[id],save(),toast='削除しました(残高も自動で戻りました)',R())}
+function edit(id){tab='imp';pending=null;R();$('#imp').value=JSON.stringify({records:[S.records[id]]},null,1)}
+function recv(){const t=ymd(now);if(S.login.dates.includes(t))return;S.login.dates.push(t);save();const q=(S.login.dates.length-1)%7+1;toast='ログインボーナス '+q+'回目！ +'+(20+(LB[q]||0))+'pt'+(q===7?' とガチャ券5枚':'');R()}
+function loginCard(){const t=ymd(now),got=S.login.dates.includes(t),L=S.login.dates.length,dn=got?(L-1)%7+1:L%7,nq=L%7+1,rw=(20+(LB[nq]||0))+'pt'+(nq===7?'+ガチャ券5枚':'');
+ const st=[1,2,3,4,5,6,7].map(q=>`<div style="flex:1;text-align:center;padding:6px 0;border-radius:12px;background:${q<=dn?'var(--pk)':'var(--bg)'};font-size:12px;${q<=dn?'color:#3a2433;':''}">${q<=dn?'✔':q}<br><span style="font-size:10px">${20+(LB[q]||0)}</span></div>`).join('');
+ return`<div class="card"><h2>🎁 ログインボーナス</h2><div style="display:flex;gap:4px;margin-bottom:8px">${st}</div><p class="mut" style="margin:0 0 8px">${got?'本日は受け取り済み。次は'+nq+'回目: '+rw:'今日は'+nq+'回目: '+rw+' がもらえます'}(7回で1周)</p><button class="${got?'line':''}" style="width:100%" ${got?'disabled':''} onclick="recv()">${got?'受け取り済み ✔':'受け取る'}</button></div>`}
+const GEN={ch:'キャラクター',fu:'家具・インテリア',za:'雑貨・小物',fa:'ファッション',ot:'その他'},PFX={ch:'CH',fu:'FU',za:'ZA',fa:'FA'};
+const CH=['ハローキティ','マイメロディ','クロミ','シナモロール','ポムポムプリン','ポチャッコ','けろけろけろっぴ','タキシードサム','ハンギョドン','バッドばつ丸','ウサハナ','キキとララ','ぐでたま','あひるのペックル','マロンクリーム','チャーミーキティ','ミミィ','ディアダニエル','こぎみゅん','ウィッシュミーメル','リラックマ','コリラックマ','キイロイトリ','チャイロイコグマ','しろくま','ねこ','とんかつ','えびふらいのしっぽ','とかげ','ざっそう','ふろしき','たぴおか','ほこり','にせつむり'];
+const ADJ=['ふわふわ','いちご','ミルキー','パステル','ゆめかわ','はちみつ','もこもこ','さくら','ほしぞら','マシュマロ','レモン','ひみつの'];
+const NN={fu:['ソファ','ベッド','テーブル','チェア','ラグ','カーテン','本棚','ランプ','クッション','ドレッサー','スツール','チェスト'],za:['マグカップ','ぬいぐるみ','ポーチ','フォトフレーム','キャンドル','ミラー','ブランケット','ステッカー','ノート','ハンカチ','キーホルダー','オルゴール'],fa:['リボン','ワンピース','ベレー帽','マフラー','カーディガン','スカート','ポシェット','パジャマ','スニーカー','ヘアピン','エプロン','ソックス']};
+let gSel='ch',gMode='pt',gRes=[],gMsg='';
+const p2=n=>String(n).padStart(2,'0');
+const SER=i=>i<20?'サンリオ':i<24?'リラックマ':'すみっコぐらし';
+const chFull=i=>CH[i]+'（'+SER(i)+'）';
+function missing(){const l=CH.map((x,i)=>['CH'+p2(i+1),chFull(i)]).filter(([id])=>!S.owned[id]);return l.length?`<details style='margin-top:8px'><summary class='mut'>未入手(${l.length}体)</summary>${l.map(([id,n])=>`<div class='rec mut'>${esc(n)}</div>`).join('')}</details>`:'<p class="mut">🎉 コンプリート！</p>'}
+function pick(g,taken){
+ if(g==='ch'){const l=CH.map((x,i)=>({id:'CH'+p2(i+1),n:chFull(i),g})).filter(o=>!S.owned[o.id]&&!taken.has(o.id));return l[Math.floor(Math.random()*l.length)]}
+ for(let k=0;k<30;k++){const a=Math.floor(Math.random()*ADJ.length),b=Math.floor(Math.random()*NN[g].length),id=PFX[g]+p2(a+1)+p2(b+1);if(!taken.has(id)||k===29)return{id,n:ADJ[a]+NN[g][b],g}}}
+const chLeft=()=>CH.length-Object.keys(S.owned).filter(k=>/^CH/.test(k)).length;
+function roll(n){const c=calc(S.records);gRes=[];gMsg='';
+ const isCh=gSel==='ch';if(isCh&&n>1)return R();const mode=isCh?'pt':gMode,cost=isCh?1000:100*n;
+ if(mode==='pt'?c.pt<cost:c.tickets<n){gMsg=mode==='pt'?'ポイントが足りません(必要 '+cost+'pt)':'ガチャ券が足りません(必要 '+n+'枚)';return R()}
+ if(gSel==='ch'&&chLeft()<n){gMsg=chLeft()?'残りキャラは'+chLeft()+'体です。回数を減らしてください':'全キャラクターをコンプリート！';return R()}
+ const taken=new Set();
+ for(let i=0;i<n;i++){const o=pick(gSel,taken);taken.add(o.id);const had=S.owned[o.id];if(!had)S.owned[o.id]={n:o.n,g:o.g,c:0};S.owned[o.id].c++;gRes.push({n:o.n,nw:!had,id:o.id})}
+ if(mode==='pt')S.spend.pt+=cost;else S.spend.tickets+=n;
+ save();R()}
+let iSel='fu',gArea='ch';
+const BPK="width:100%;min-height:58px;border-radius:999px;font-size:20px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(200,60,120,.6);background:linear-gradient(180deg,#ffb3d4,#f06aa8);border:2px solid #f4d58d;box-shadow:0 3px 10px rgba(240,106,168,.45),inset 0 2px 4px rgba(255,255,255,.6)";
+const BLV="width:100%;min-height:54px;border-radius:999px;font-size:17px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(120,80,190,.6);background:linear-gradient(180deg,#f3b6e6,#b9a1f0);border:2px solid #f4d58d;box-shadow:0 3px 10px rgba(160,130,230,.4),inset 0 2px 4px rgba(255,255,255,.6)";
+const bnSrc=k=>IMG['BN_'+k]||BNR[k]||'';
+const GP=t=>{const s=bnSrc(t),ti=t==='ch'?'キャラクターガチャ':'アイテムガチャ';return s?`<img src='${s}' alt='' style='width:100%;height:auto;display:block;border-radius:18px' onerror="this.replaceWith(Object.assign(document.createElement('h2'),{textContent:'${ti}',style:'text-align:center'}))">`:`<h2 style='text-align:center;margin:8px 0'>${ti}</h2>`};
+let bnT='ch';
+async function bnSet(f){if(!f)return;try{const d=await shrink(f,1080);await idbSet('BN_'+bnT,d);IMG['BN_'+bnT]=d;toast='バナーを登録しました'}catch(e){toast=QMSG}R()}
+async function bnDel(){try{await idbSet('BN_ch',null);await idbSet('BN_it',null);delete IMG.BN_ch;delete IMG.BN_it;toast='登録したバナーを外しました'}catch(e){toast=QMSG}R()}
+function rollCh(){gSel='ch';gArea='ch';roll(1)}
+function rollIt(n){gSel=iSel;gArea='it';roll(n)}
+function resTile(r,big){const x=S.owned[r.id]||{c:1},im=IMG[r.id];
+ return`<div style='text-align:center;min-width:0'><div style='position:relative;aspect-ratio:1;border-radius:16px;overflow:hidden;background:var(--cardh);border:1.5px solid rgba(255,255,255,.8);box-shadow:0 2px 8px rgba(255,150,190,.3)'>${im?`<img src='${im}' style='width:100%;height:100%;object-fit:cover'>`:`<div style='height:100%;display:flex;align-items:center;justify-content:center;font-size:${big?64:30}px'>🎀</div>`}${r.nw?`<span style='position:absolute;left:4px;top:4px;background:linear-gradient(180deg,#ffb3d4,#f06aa8);color:#fff;border-radius:999px;padding:0 7px;font-size:11px;font-weight:800'>NEW</span>`:''}${x.c>1?`<span style='position:absolute;right:4px;bottom:4px;background:var(--cardt);border-radius:8px;padding:0 6px;font-size:11px;font-weight:700'>×${x.c}</span>`:''}</div><div style='font-size:${big?16:12}px;font-weight:700;margin-top:4px;line-height:1.3;word-break:break-all'>${esc(r.n)}</div></div>`}
+function resCard(a){if(gArea!==a||!gRes.length)return'';const big=gRes.length===1;
+ return`<div class='card' style='border-radius:26px;text-align:center'><h2>✨ ${big?'結果':gRes.length+'連の結果'} ✨</h2><div style='display:grid;grid-template-columns:${big?'minmax(0,200px)':'repeat(3,minmax(0,1fr))'};justify-content:center;gap:10px'>${gRes.map(r=>resTile(r,big)).join('')}</div></div>`}
+function gachaView(c){const left=chLeft(),mode=gMode;
+ const pill=(ic,t)=>`<span style='flex:1;display:flex;align-items:center;justify-content:center;gap:3px;background:var(--cardh);border:1.5px solid rgba(255,255,255,.7);border-radius:999px;padding:6px 2px;font-size:12px;font-weight:700;white-space:nowrap'>${ic} ${t}</span>`;
+ const gen=[['fu','🛋','家具・インテリア'],['za','🧴','雑貨・小物'],['fa','👗','ファッション']].map(a=>`<button style='flex:1;min-width:0;padding:8px 2px;min-height:44px;font-size:12px;border-radius:999px;white-space:nowrap;${iSel===a[0]?'background:linear-gradient(180deg,#ffb3d4,#f06aa8);color:#fff;border:2px solid #f4d58d':'background:var(--cardh);color:var(--tx);border:1.5px solid rgba(255,255,255,.7)'}' onclick="iSel='${a[0]}';gRes=[];gMsg='';R()">${a[1]} ${a[2]}</button>`).join('');
+ const pm=[['pt','⭐ ポイントで'],['tk','🎟 ガチャ券で']].map(a=>`<button style='flex:1;padding:6px;min-height:40px;font-size:13px;border-radius:999px;${mode===a[0]?'background:var(--pk);color:#3a2433':'background:var(--cardh);color:var(--tx);border:1.5px solid rgba(255,255,255,.7)'}' onclick="gMode='${a[0]}';gRes=[];gMsg='';R()">${a[1]}</button>`).join('');
+ const cost=(p,t)=>`<div style='text-align:center;font-size:12px;margin-top:4px;white-space:nowrap'><span style='${mode==='pt'?'font-weight:800':'opacity:.65'}'>⭐ ${p}</span> <span class="mut">または</span> <span style='${mode==='tk'?'font-weight:800':'opacity:.65'}'>🎟 ${t}</span></div>`;
+ const msg=a=>gArea===a&&gMsg?`<p class='ng' style='text-align:center;margin:8px 0 0'>${esc(gMsg)}</p>`:'';
+ const sub=t=>`<p style='text-align:center;font-weight:700;margin:10px 0 8px'>✧ ${t} ✧</p>`;
+ return`<div style='display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px'><h1 style='margin:0'>🎀 ガチャ</h1><div style='background:var(--cardh);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1.5px solid rgba(255,255,255,.7);border-radius:999px;padding:5px 12px;font-weight:700;font-size:14px;white-space:nowrap'>⭐ ${pts(c.pt)} <span style='opacity:.4;margin:0 3px'>|</span> 🎟 ${c.tickets}枚</div></div>`
+ +`<div class='card' style='border-radius:26px;padding:10px'>${GP('ch')}${sub('新しい仲間をお迎えしよう')}<div style='display:flex;gap:6px'>${pill('👑','重複なし')}${pill('⭐','未獲得 '+left+'体')}${pill('🚫','ガチャ券不可')}</div><button style='${BPK};margin-top:12px' onclick='rollCh()'>✦ ${left?'お迎えする':'コンプリート!'} ✦</button><div style='text-align:center;font-weight:800;margin-top:6px'>⭐ 1回 1,000pt${c.pt>=1000?'':' <span class="mut">(ポイント不足)</span>'}</div>${msg('ch')}</div>${resCard('ch')}`
+ +`<div class='card' style='border-radius:26px;padding:10px'>${GP('it')}${sub('お部屋や持ち物を少しずつ充実させよう')}<div style='display:flex;gap:6px'>${gen}</div><div style='display:flex;gap:6px;margin:10px 0'>${pm}</div><div class='row'><div><button style='${BLV}' onclick='rollIt(1)'>1回まわす</button>${cost('100pt','1枚')}</div><div><button style='${BLV}' onclick='rollIt(10)'>10連まわす</button>${cost('1,000pt','10枚')}</div></div>${msg('it')}</div>${resCard('it')}`}
+
+async function copyUn(){const un=Object.entries(S.owned).filter(([i,x])=>!x.img&&x.src!=='shop');
+ const t='次のアイテムのかわいい画像を、1つずつ別の画像として作ってください。ファイル名はIDにしてください。\nID｜名前｜ジャンル\n'+un.map(([i,x])=>i+'｜'+x.n+'｜'+GEN[x.g]).join('\n');
+ let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();ok=document.execCommand('copy');a.remove()}catch(e2){}}
+ $('#cm').textContent=ok?'コピーしました。チャッピーに貼り付けてください。':'コピーできませんでした'}
+let IMG={},db=null,unm=[],imgMsg='',zid=null,tgt=null;
+const QMSG='⚠️ 画像を保存できませんでした。容量不足か、このブラウザでは画像を保存できない設定の可能性があります。不要な画像を削除するか、バックアップを取ってから整理してください。';
+function idb(){return new Promise(r=>{try{const q=indexedDB.open('gymgame_img',1);q.onupgradeneeded=()=>q.result.createObjectStore('i');q.onsuccess=()=>{db=q.result;r(true)};q.onerror=()=>r(false)}catch(e){r(false)}})}
+function idbAll(){return new Promise(r=>{if(!db)return r({});const o={},q=db.transaction('i').objectStore('i').openCursor();q.onsuccess=()=>{const c=q.result;if(c){o[c.key]=c.value;c.continue()}else r(o)};q.onerror=()=>r({})})}
+function idbSet(k,v){return new Promise((res,rej)=>{if(!db)return rej(new Error('nodb'));const t=db.transaction('i','readwrite');v===null?t.objectStore('i').delete(k):t.objectStore('i').put(v,k);t.oncomplete=res;t.onerror=t.onabort=()=>rej(t.error)})}
+function recon(){for(const k in S.owned)S.owned[k].img=!!IMG[k]}
+function shrink(f,mx=360){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=()=>rej(new Error('read'));fr.onload=()=>{const im=new Image();im.onerror=()=>rej(new Error('img'));im.onload=()=>{const s=Math.min(1,mx/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',0.82))};im.src=fr.result};fr.readAsDataURL(f)})}
+async function setImg(id,f){try{const d=await shrink(f);await idbSet(id,d);IMG[id]=d;recon();return 1}catch(e){if(!imgMsg)imgMsg=e&&e.message==='img'||e&&e.message==='read'?'⚠️ 画像を読み込めませんでした':QMSG;return 0}}
+async function addFiles(fl,single){imgMsg='';let ok=0,um=0,ng=0;
+ for(const f of fl){const m=single||matchId(f.name);
+  if(m&&S.owned[m]){(await setImg(m,f))?ok++:ng++;if(imgMsg)break}
+  else{try{unm.push(await shrink(f));unmSel.push('');unmNm.push(f.name||'');bp=null;um++}catch(e){ng++}}}
+ if(!imgMsg)imgMsg=ok+'枚を登録'+(um?'、'+um+'枚は名前が合わないので下で選んでください':'')+(ng?'、'+ng+'枚は失敗':'');
+ R()}
+let unmSel=[],unmNm=[],bp=null;
+function matchId(fn){const s=fn.normalize('NFKC').replace(/\.[^.]*$/,'');
+ const m=/(CH)[\s_-]?(\d{2})|(FU|ZA|FA)[\s_-]?(\d{4})/i.exec(s);
+ if(m){const id=((m[1]||m[3])+(m[2]||m[4])).toUpperCase();if(S.owned[id])return id}
+ const c=Object.entries(S.owned).filter(([i,x])=>s.includes(x.n.split('（')[0]));return c.length===1?c[0][0]:''}
+function selChg(k,v){unmSel[k]=v;bp=null}
+function autoFill(){const used=new Set(unmSel.filter(Boolean)),free=Object.entries(S.owned).filter(([i,x])=>!x.img&&x.src!=='shop'&&!used.has(i)).map(e=>e[0]);let j=0;unmSel=unmSel.map(v=>v||free[j++]||'');bp=null;imgMsg='';R()}
+function bulkPrev(){const sel=unm.map((u,k)=>unmSel[k]||'').filter(Boolean),cnt={};sel.forEach(i=>cnt[i]=(cnt[i]||0)+1);
+ bp={n:sel.length,none:unm.length-sel.length,dup:Object.keys(cnt).filter(i=>cnt[i]>1),ow:sel.filter(i=>S.owned[i]&&S.owned[i].img).length};R()}
+async function bulkDo(){if(!bp||bp.dup.length||!bp.n)return;let ok=0,ng=0;const ku=[],ks=[],kn=[];
+ for(let k=0;k<unm.length;k++){const id=unmSel[k]||'';
+  if(id){try{await idbSet(id,unm[k]);IMG[id]=unm[k];ok++;continue}catch(e){ng++}}
+  ku.push(unm[k]);ks.push(id);kn.push(unmNm[k]||'')}
+ unm=ku;unmSel=ks;unmNm=kn;recon();bp=null;
+ imgMsg=(ng?'⚠️ ':'')+'成功 '+ok+'枚 / 失敗 '+ng+'枚'+(ng?'(容量不足の可能性)':'')+(unm.length?'。残り'+unm.length+'枚':'');R()}
+function bulkBar(){let h='<div class="row" style="margin-top:10px"><button class="sub" onclick="autoFill()">順番に自動入力</button><button class="gr" onclick="bulkPrev()">まとめて登録</button></div><p class="mut" style="margin:6px 0 0">「順番に自動入力」は、未選択の画像を、画像がまだのアイテム(コピーした一覧の順)に上から割り当てるだけで、登録はしません。内容を確認してから登録してください。</p>';
+ if(bp)h+=`<div class='warn' style='margin:10px 0 0'>${bp.dup.length?`<b class='ng'>同じアイテムが複数の画像に選ばれています:</b><br>${bp.dup.map(i=>esc(S.owned[i].n)).join('<br>')}<br>選び直してください。`:bp.n?`登録 ${bp.n}枚${bp.ow?'(うち'+bp.ow+'枚は今の画像を上書き)':''}${bp.none?`<br>未選択 ${bp.none}枚はこのまま残ります`:''}<br><button style='width:100%;margin-top:8px' onclick='bulkDo()'>この内容で登録する</button>`:'紐づけ先が1つも選ばれていません'}</div>`;
+ return h}
+function pick1(id){tgt=id;$('#f1').click()}
+async function assign(k){const id=unmSel[k]||'';if(!id){imgMsg='⚠️ 紐づけ先を選んでください';return R()}try{await idbSet(id,unm[k]);IMG[id]=unm[k];unm.splice(k,1);unmSel.splice(k,1);unmNm.splice(k,1);bp=null;recon();imgMsg='紐づけました'}catch(e){imgMsg=QMSG}R()}
+async function delImg(id){try{await idbSet(id,null);delete IMG[id];recon();zid=null;imgMsg='画像を削除しました'}catch(e){imgMsg=QMSG}R()}
+function bulkCard(){return`<div class='card'><h2>🖼 画像をまとめて登録</h2><p class='mut' style='margin-top:0'>ファイル名にIDが入っている画像(例: CH33.png)は自動で紐づきます。写真アプリから選ぶと名前が変わることがあるので、その場合は下で1枚ずつ選べます。画像は自動で小さくして保存します。</p><button class='gr' style='width:100%' onclick="$('#fm').click()">画像を選ぶ(複数OK)</button>${imgMsg?`<p class='${imgMsg.startsWith('⚠')?'ng':'ok'}' style='margin-bottom:0'>${esc(imgMsg)}</p>`:''}</div>`}
+function unmView(){if(!unm.length)return'';const opts=Object.entries(S.owned).sort((a,b)=>(!!a[1].img)-(!!b[1].img)||(a[0]<b[0]?-1:1)).map(([i,x])=>`<option value='${i}'>${x.img?'🖼 ':''}${esc(x.n)}</option>`).join('');
+ return`<div class='card'><h2>未割り当ての画像(${unm.length})</h2>${unm.map((u,k)=>`<div class='rec' style='display:flex;gap:8px;align-items:center'><img src='${u}' style='width:64px;height:64px;object-fit:cover;border-radius:12px;flex:none'><div style='flex:1;min-width:0'><div class='mut' style='font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>${esc(unmNm[k]||'')}</div><select id='sl${k}' onchange="selChg(${k},this.value)" style='width:100%;font:inherit;padding:8px;border-radius:12px;color:var(--tx);background:var(--card)'><option value=''>— 選ぶ —</option>${unmSel[k]?opts.replace("value='"+unmSel[k]+"'","value='"+unmSel[k]+"' selected"):opts}</select></div><button onclick='assign(${k})'>OK</button></div>`).join('')}${bulkBar()}</div>`}
+function zoomView(){if(!zid||!S.owned[zid])return'';const x=S.owned[zid];return`<div style='position:fixed;inset:0;background:rgba(30,20,30,.88);z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px' onclick="zid=null;R()"><img src='${IMG[zid]||''}' style='max-width:92%;max-height:60%;border-radius:18px;background:#fff'><div style='color:#fff;font-weight:700;text-align:center'>${esc(x.n)}<br><span style='font-weight:400;font-size:13px'>${GEN[x.g]} ・ 所持 ×${x.c}</span></div><div class='row' style='width:100%;max-width:360px' onclick='event.stopPropagation()'><button onclick="pick1('${zid}')">変更</button><button class='line' style='color:#fff' onclick="delImg('${zid}')">削除</button><button class='sub' onclick="zid=null;R()">閉じる</button></div></div>`}
+async function copyImg(){const n=Object.keys(IMG).length;if(!n)return $('#ib').textContent='まだ画像がありません';const t=JSON.stringify({kind:'gymgame-img',v:1,images:IMG});let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();ok=document.execCommand('copy');a.remove()}catch(e2){}}
+ $('#ib').textContent=ok?n+'枚(約'+Math.round(t.length/1024)+'KB)をコピーしました。メモアプリなどに貼り付けて保存してください。':'コピーできませんでした(データが大きすぎる可能性があります)'}
+async function restoreImg(){let j;try{j=JSON.parse($('#ir').value)}catch(e){return $('#ip').textContent='形式が正しくありません'}
+ if(!j||j.kind!=='gymgame-img'||!j.images)return $('#ip').textContent='画像バックアップではありません';let n=0;
+ try{for(const[k,v]of Object.entries(j.images)){if(typeof v==='string'&&v.startsWith('data:image/')){await idbSet(k,v);IMG[k]=v;n++}}}catch(e){recon();return $('#ip').textContent=QMSG}
+ recon();$('#ip').textContent=n+'枚を復元しました(持ち物にない画像は表示されません)'}
+let pf=null,pfMsg='',buyId=null,szid=null;
+const OV='position:fixed;inset:0;background:rgba(30,20,30,.8);z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px',INS='width:100%;font:inherit;padding:12px;border-radius:14px;border:2px solid var(--bd);background:var(--card);color:var(--tx)';
+function pfOpen(id){const x=S.shop.products[id];pf=x?{id,n:x.n,p:x.p,g:x.g}:{id:'',n:'',p:'',g:'fu'};pfMsg='';R()}
+async function pfImgSet(f){if(!f||!pf)return;try{pf.img=await shrink(f);pfMsg=''}catch(e){pfMsg='⚠️ 画像を読み込めませんでした'}R()}
+async function saveProd(){const n=(pf.n||'').trim(),p=parseInt(String(pf.p).normalize('NFKC').replace(/[,円¥\s]/g,''),10);
+ if(!n){pfMsg='商品名を入れてください';return R()}
+ if(!(p>0)){pfMsg='価格を数字で入れてください(例: 1980)';return R()}
+ const isNew=!pf.id,id=pf.id||'SP'+String(S.shop.seq+1).padStart(3,'0');
+ try{if(pf.img!==undefined){await idbSet(id,pf.img);if(pf.img)IMG[id]=pf.img;else delete IMG[id]}}catch(e){pfMsg=QMSG;return R()}
+ if(isNew)S.shop.seq++;S.shop.products[id]={n,p,g:pf.g};
+ if(S.owned[id]){S.owned[id].n=n;S.owned[id].g=pf.g}
+ recon();save();pf=null;toast=isNew?'商品を登録しました':'商品を更新しました';R()}
+async function delProd(){const id=pf.id;delete S.shop.products[id];try{if(!S.owned[id]&&IMG[id]){await idbSet(id,null);delete IMG[id]}}catch(e){}recon();save();pf=null;toast='商品を削除しました(買った持ち物は残ります)';R()}
+function buy(id){if(S.shop.products[id]){buyId=id;R()}}
+function doBuy(){const x=S.shop.products[buyId],c=calc(S.records);
+ if(!x||c.yen<x.p){toast='⚠️ お給料が足りません';buyId=null;return R()}
+ S.spend.yen+=x.p;const o=S.owned[buyId]=S.owned[buyId]||{n:x.n,g:x.g,c:0};o.n=x.n;o.g=x.g;o.src='shop';o.c++;
+ recon();save();toast='「'+x.n+'」を購入しました!';buyId=null;R()}
+function pfView(){const im=pf.img!==undefined?pf.img:IMG[pf.id];
+ return`<div style='position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;padding:calc(14px + env(safe-area-inset-top,0px)) 14px 40px'><div style='max-width:520px;margin:0 auto'><h1>${pf.id?'商品を編集':'商品を登録'}</h1><div class='card'><div style='display:flex;gap:12px;align-items:center'>${im?`<img src='${im}' style='width:96px;height:96px;object-fit:cover;border-radius:14px;background:#fff;flex:none'>`:`<div style='width:96px;height:96px;border-radius:14px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:12px;flex:none'>画像なし</div>`}<div style='flex:1'><button class='sub' style='width:100%' onclick="$('#fp').click()">${im?'画像を変更':'画像を選ぶ'}</button>${im?`<button class='line' style='width:100%;margin-top:6px;min-height:36px;padding:6px' onclick="pf.img=null;R()">画像をはずす</button>`:''}</div></div><p class='mut' style='margin:12px 0 4px'>商品名(必須)</p><input style='${INS}' value="${esc(pf.n)}" oninput="pf.n=this.value"><p class='mut' style='margin:12px 0 4px'>価格(税込・円・必須)</p><input style='${INS}' inputmode='numeric' value="${esc(pf.p)}" oninput="pf.p=this.value"><p class='mut' style='margin:12px 0 4px'>ジャンル</p><select style='${INS}' onchange="pf.g=this.value">${['fu','fa','za','ot'].map(k=>`<option value='${k}' ${pf.g===k?'selected':''}>${GEN[k]}</option>`).join('')}</select>${pfMsg?`<p class='ng'>${esc(pfMsg)}</p>`:''}</div><div class='row'><button class='line' onclick="pf=null;R()">キャンセル</button><button onclick='saveProd()'>保存</button></div>${pf.id?(pf.cd?`<div class='warn' style='margin-top:12px'>この商品をショップから削除します(買った持ち物は残ります)。<div class='row' style='margin-top:8px'><button class='line' onclick="pf.cd=false;R()">やめる</button><button onclick='delProd()'>削除する</button></div></div>`:`<button class='line' style='width:100%;margin-top:12px' onclick="pf.cd=true;R()">この商品を削除</button>`):''}</div></div>`}
+function shopView(c){const ps=Object.entries(S.shop.products);
+ let h=`<h1>🛍 ショップ</h1><div class='card'><div class='mut'>お給料</div><div class='big'>${yen(c.yen)}</div><p class='mut' style='margin:6px 0 0'>ゲーム内の買い物です。実際の注文や決済はしません。</p></div><button class='gr' style='width:100%;margin-bottom:12px' onclick="pfOpen('')">＋ 商品を登録</button>`;
+ h+=ps.length?`<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px'>${ps.map(([id,x])=>{const ok=c.yen>=x.p,im=IMG[id];return`<div class='card' style='margin:0;padding:10px'>${im?`<img src='${im}' onclick="szid='${id}';R()" style='width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;background:#fff'>`:`<div style='aspect-ratio:1;border-radius:14px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:13px'>画像なし</div>`}<div style='font-weight:700;margin-top:6px;word-break:break-all'>${esc(x.n)}</div><div style='font-weight:800;margin-bottom:6px'>${yen(x.p)}</div><button class='${ok?'':'line'}' style='width:100%;padding:8px' ${ok?'':'disabled'} onclick="buy('${id}')">${ok?'購入する':'お給料が足りません'}</button><button class='line' style='width:100%;margin-top:6px;padding:6px;min-height:36px' onclick="pfOpen('${id}')">編集</button></div>`}).join('')}</div>`:`<div class='card mut'>まだ商品がありません。「＋ 商品を登録」から、気になる商品の名前と価格を入れましょう。</div>`;
+ const b=S.shop.products[buyId],z=S.shop.products[szid];
+ if(b)h+=`<div style='${OV}' onclick="buyId=null;R()"><div class='card' style='width:100%;max-width:360px;margin:0' onclick='event.stopPropagation()'><h2>購入しますか?</h2><p style='margin:0 0 6px'>${esc(b.n)}<br><b>${yen(b.p)}</b></p><p class='mut'>お給料 ${yen(c.yen)} → <b>${yen(c.yen-b.p)}</b></p><div class='row'><button class='line' onclick="buyId=null;R()">やめる</button><button onclick='doBuy()'>購入する</button></div></div></div>`;
+ if(z&&IMG[szid])h+=`<div style='${OV}' onclick="szid=null;R()"><img src='${IMG[szid]}' style='max-width:92%;max-height:62%;border-radius:18px;background:#fff'><div style='color:#fff;font-weight:700;text-align:center'>${esc(z.n)}<br>${yen(z.p)}</div><button class='sub' onclick="szid=null;R()">閉じる</button></div>`;
+ if(pf)h+=pfView();
+ return h}
+const LS=[['ch','キャラクター'],['fu','家具・インテリア'],['za','雑貨・小物'],['fa','ファッション'],['ot','その他'],['gacha','ガチャ入手品'],['shop','ショップ購入品']];
+function listTxt(sc){let o=Object.entries(S.owned);
+ if(GEN[sc])o=o.filter(([i,x])=>x.g===sc);else if(sc==='shop')o=o.filter(([i,x])=>x.src==='shop');else if(sc==='gacha')o=o.filter(([i,x])=>x.src!=='shop');
+ if(!o.length)return'';
+ const lb=(LS.find(a=>a[0]===sc)||[0,''])[1];let t='【持ち物リスト】'+(sc==='all'?'':'('+lb+'のみ)')+'\n';
+ for(const k of Object.keys(GEN)){const l=o.filter(([i,x])=>x.g===k).sort((a,b)=>a[0]<b[0]?-1:1);if(!l.length)continue;
+  t+='\n■'+GEN[k]+'\n'+l.map(([i,x])=>i+'｜'+x.n+'｜×'+x.c+'｜'+(x.src==='shop'?'ショップ':'ガチャ')).join('\n')+'\n'}
+ return t+'\n合計 '+o.length+'種 / '+o.reduce((s,[i,x])=>s+x.c,0)+'個'}
+async function copyList(sc){const t=listTxt(sc),m=$('#lc');if(!t)return m.textContent='該当する持ち物がありません';
+ let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();ok=document.execCommand('copy');a.remove()}catch(e2){}}
+ m.textContent=ok?'コピーしました('+(sc==='all'?'全持ち物':(LS.find(a=>a[0]===sc)||[0,''])[1])+')。ChatGPTに貼り付けてください。':'コピーできませんでした'}
+function listCard(){return`<div class='card'><h2>📋 ChatGPT用にリストをコピー</h2><button style='width:100%;margin-bottom:8px' onclick="copyList('all')">全持ち物をコピー</button><div style='display:grid;grid-template-columns:1fr 1fr;gap:8px'>${LS.map(a=>`<button class='sub' style='padding:8px 4px;font-size:14px' onclick="copyList('${a[0]}')">${a[1]}</button>`).join('')}</div><p id='lc' class='mut' style='margin:8px 0 0'></p></div>`}
+let rp=false,rz=null,rdel=null,rMsg='';
+const curBg=()=>S.rooms.sel&&IMG[S.rooms.sel]?IMG[S.rooms.sel]:null;
+function rpOpen(){rp=true;rMsg='';R()}
+function setRoom(id){S.rooms.sel=id;save();rp=false;R();scrollTo(0,0)}
+function rndRoom(){const l=S.rooms.list.filter(i=>IMG[i]);if(!l.length){rMsg='⚠️ 画像がありません';rp=true;return R()}const c=l.filter(i=>i!==S.rooms.sel),p=c.length?c:l;S.rooms.sel=p[Math.floor(Math.random()*p.length)];save();rp=false;R();scrollTo(0,0)}
+async function addRooms(fl){let ok=0,ng=0;rMsg='';
+ for(const f of fl){try{const d=await shrink(f,1000),id='RM'+String(S.rooms.seq+1).padStart(3,'0');await idbSet(id,d);IMG[id]=d;S.rooms.seq++;S.rooms.list.push(id);if(!S.rooms.sel)S.rooms.sel=id;ok++}catch(e){ng++;if(!(e&&(e.message==='img'||e.message==='read')))rMsg=QMSG}}
+ save();rMsg=rMsg===QMSG?ok+'枚追加、'+ng+'枚失敗。'+QMSG:ok+'枚を追加しました'+(ng?'、'+ng+'枚は読み込めませんでした':'');rp=true;R()}
+async function delRoom(){const id=rdel;rdel=null;try{await idbSet(id,null);delete IMG[id]}catch(e){rMsg=QMSG;return R()}S.rooms.list=S.rooms.list.filter(i=>i!==id);if(S.rooms.sel===id)S.rooms.sel=null;save();R()}
+const IB='flex:none;width:56px;height:56px;border-radius:50%;padding:0;min-height:0;font-size:20px;line-height:1.1;background:var(--cardh);color:var(--tx);border:1.5px solid rgba(255,255,255,.7);box-shadow:0 2px 8px rgba(255,150,190,.25);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)',PN='background:var(--cardh);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:22px;border:1.5px solid rgba(255,255,255,.7);box-shadow:0 2px 8px rgba(255,150,190,.25);padding:8px 10px';
+const chip=(l,v)=>`<div style='flex:1;min-width:0;background:var(--cardh);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:18px;border:1.5px solid rgba(255,255,255,.7);box-shadow:0 2px 8px rgba(255,150,190,.25);padding:4px 2px;line-height:1.2;text-align:center'><div style='font-size:10px;opacity:.75'>${l}</div><div style='font-size:13px;font-weight:800'>${v}</div></div>`;
+function bgLayer(c){const b=curBg();if(!b)return'';const hm=tab==='home';
+ let t=`<div style='position:fixed;inset:0;z-index:-2;overflow:hidden'><img src='${b}' style='position:absolute;inset:-20px;width:calc(100% + 40px);height:calc(100% + 40px);object-fit:cover;object-position:center top;filter:blur(${hm?18:0}px)'>${hm?'':`<div style='position:absolute;inset:0;background:var(--bgd)'></div>`}</div>`;
+ if(hm)t+=`<div style='position:fixed;z-index:-1;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 14px);height:var(--A)'><img src='${b}' style='width:100%;height:100%;object-fit:contain'></div><div style='position:relative;height:var(--A)' onclick="rz='${S.rooms.sel}';R()"><div style='position:absolute;top:8px;left:-6px;right:-6px;display:flex;justify-content:space-between;gap:6px;pointer-events:none'>${chip('👛 お給料',yen(c.yen))}${chip('⭐ ポイント',pts(c.pt))}${chip('🎟 ガチャ券',c.tickets+'枚')}${chip('🏋 今月来館',(c.month[ymd(now).slice(0,7)]||0)+'回')}</div><div style='position:absolute;top:58px;left:-6px;right:-6px;display:flex;flex-direction:column;gap:6px' onclick='event.stopPropagation()'>${loginMini()}${dailyRow()}</div><div style='position:absolute;left:-6px;right:-6px;bottom:8px;display:flex;justify-content:flex-end;gap:8px' onclick='event.stopPropagation()'><button style='${IB}' onclick='rpOpen()'>🖼<br><span style='font-size:9px'>背景変更</span></button><button style='${IB}' onclick='rndRoom()'>🔀<br><span style='font-size:9px'>ランダム</span></button><button style='${IB}' onclick="rz='${S.rooms.sel}';R()">🔍<br><span style='font-size:9px'>拡大</span></button></div></div>`;
+ return t}
+function roomView(){const L=S.rooms.list;let h='';
+ if(rp)h+=`<div style='position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;padding:calc(14px + env(safe-area-inset-top,0px)) 14px 40px'><div style='max-width:520px;margin:0 auto'><h1>🖼 マイルーム背景</h1><div class='row' style='margin-bottom:8px'><button class='gr' onclick="$('#fr').click()">＋ 画像を追加</button><button class='sub' onclick='rndRoom()'>🎲 ランダム</button></div>${rMsg?`<p class='${rMsg.startsWith('⚠')?'ng':'ok'}'>${esc(rMsg)}</p>`:''}${L.length?`<p class='mut'>画像をタップすると背景になります</p>`:`<p class='mut'>まだ画像がありません。「＋ 画像を追加」でChatGPTのマイルーム画像を選びましょう(複数OK)。</p>`}<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px'>${L.map(id=>`<div>${IMG[id]?`<img src='${IMG[id]}' onclick="setRoom('${id}')" style='width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;border:3px solid ${S.rooms.sel===id?'var(--pk)':'transparent'}'>`:`<div style='aspect-ratio:3/4;border-radius:12px;background:var(--card);display:flex;align-items:center;justify-content:center;text-align:center;color:var(--mut);font-size:11px;padding:4px'>画像なし<br>(画像バックアップを復元)</div>`}<div class='row' style='margin-top:4px;gap:4px'><button class='line' style='padding:2px;min-height:34px' onclick="rz='${id}';R()">🔍</button><button class='line' style='padding:2px;min-height:34px' onclick="rdel='${id}';R()">🗑</button></div></div>`).join('')}</div><div class='row' style='margin-top:14px'><button class='line' onclick='setRoom(null)'>元のデザインに戻す</button><button onclick='rp=false;R()'>閉じる</button></div></div></div>`;
+ if(rz&&IMG[rz])h+=`<div style='position:fixed;inset:0;z-index:30;background:#000;display:flex;align-items:center;justify-content:center' onclick="rz=null;R()"><img src='${IMG[rz]}' style='max-width:100%;max-height:100%;object-fit:contain'><button class='sub' style='position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:12px;padding:8px 14px;min-height:40px'>閉じる</button></div>`;
+ if(rdel)h+=`<div style='${OV};z-index:40' onclick="rdel=null;R()"><div class='card' style='width:100%;max-width:340px;margin:0' onclick='event.stopPropagation()'><h2>この背景画像を削除しますか?</h2><div class='row'><button class='line' onclick="rdel=null;R()">やめる</button><button onclick='delRoom()'>削除する</button></div></div></div>`;
+ return h}
+let wf=null,wsel=null,rsf=false,cf='all',ci=null;
+const FT=[['all','すべて'],['ch','キャラクター'],['fu','家具・インテリア'],['za','雑貨・小物'],['fa','ファッション'],['ot','その他']];
+function togD(k){const t=ymd(now),d=S.daily[t]=S.daily[t]||{};d[k]=d[k]?0:1;if(!d.s&&!d.e)delete S.daily[t];save();R()}
+function loginMini(){const t=ymd(now),got=S.login.dates.includes(t),L=S.login.dates.length,dn=got?(L-1)%7+1:L%7,nq=L%7+1;
+ const st=[1,2,3,4,5,6,7].map(q=>`<span style='flex:1;text-align:center;border-radius:999px;padding:3px 0;font-size:12px;font-weight:700;background:${q<=dn?'var(--pk)':'var(--cardh)'};${q<=dn?'color:#3a2433':''}'>${q<=dn?'✔':q}</span>`).join('');
+ return`<div style='background:var(--cardh);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:22px;border:1.5px solid rgba(255,255,255,.7);box-shadow:0 2px 8px rgba(255,150,190,.25);padding:8px 10px;display:flex;align-items:center;gap:8px'><div style='flex:1;min-width:0'><div style='display:flex;justify-content:space-between;font-size:11px;font-weight:700'><span>🎁 ログインボーナス</span><span>${dn}/7日目${got?'':' ・今日 +'+(20+(LB[nq]||0))+'pt'+(nq===7?'+券5':'')}</span></div><div style='display:flex;gap:2px;margin-top:2px'>${st}</div></div><button class='${got?'line':''}' style='flex:none;padding:6px 12px;min-height:36px;font-size:13px' ${got?'disabled':''} onclick='recv()'>${got?'✔':'受取'}</button></div>`}
+function dailyRow(){const t=ymd(now),d=S.daily[t]||{},w=S.weights[t]!=null,n=(w?1:0)+(d.s?1:0)+(d.e?1:0);
+ const tl=(on,lb,oc)=>`<button style='flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:4px;padding:5px 7px;min-height:38px;font-size:11.5px;border-radius:999px;background:${on?'var(--pk)':'var(--cardh)'};color:${on?'#3a2433':'var(--tx)'};border:1.5px solid rgba(255,255,255,.7)' onclick='${oc}'><span style='white-space:nowrap'>${lb}</span><span style='flex:none;width:18px;height:18px;border-radius:50%;border:2px solid ${on?'#fff':'var(--mut)'};background:${on?'#fff':'transparent'};font-size:11px;line-height:14px;color:#e0508a'>${on?'✔':''}</span></button>`;
+ return`<div style='${PN}'><div style='display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:5px'><span>📋 今日のミッション</span><span>${n} / 3</span></div><div style='display:flex;gap:5px'>${tl(w,'体重を測る','wOpen("'+t+'")')}${tl(d.s,'ストレッチ','togD("s")')}${tl(d.e,'運動10分以上','togD("e")')}</div></div>`}
+function weeklyCard(c){const t=ymd(now),w=c.weeks[c.wk(t)]||{ex:0,gym:0,sw:0,st:0};
+ const it=[['🏋','ジムに2回行く',w.gym,2,'150pt'],['🏊','スイミングを1回する',w.sw,1,'100pt'],['💪','筋トレを1回する',w.st,1,'100pt'],['📅','週に3日以上運動する',w.ex,3,'ガチャ券5枚']],n=it.filter(x=>x[2]>=x[3]).length;
+ return`<div class='card' style='border-radius:24px'><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'><h2 style='margin:0'>📋 ウィークリーミッション</h2><span class='mut'>今週: <b>${n}</b> / 4 達成</span></div>${it.map(x=>`<div style='display:flex;align-items:center;gap:6px;padding:6px 10px;margin-bottom:6px;border-radius:999px;background:var(--cardh)'><span style='flex:none'>${x[0]}</span><span style='flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>${x[1]}</span><span style='flex:none;width:44px;height:8px;border-radius:4px;background:rgba(0,0,0,.1);overflow:hidden'><span style='display:block;height:100%;width:${Math.min(100,100*x[2]/x[3])}%;background:var(--pk)'></span></span><span class='mut' style='flex:none;width:28px;text-align:right'>${Math.min(x[2],x[3])}/${x[3]}</span><span style='flex:none;background:var(--pk);color:#3a2433;border-radius:999px;padding:1px 7px;font-size:10.5px;font-weight:700'>${x[4]}</span></div>`).join('')}<p class='mut' style='margin:6px 0 0'>運動記録の取り込みから自動判定します。全部達成しなくてもOKです。</p></div>`}
+function wOpen(d){wf={d,v:S.weights[d]!=null?String(S.weights[d]):'',m:''};R()}
+function wSave(){const v=parseFloat(String(wf.v).normalize('NFKC').replace(/[^0-9.]/g,''));if(!(v>0&&v<500)){wf.m='体重を数字で入力してください(例: 48.5)';return R()}S.weights[wf.d]=Math.round(v*10)/10;save();toast='体重を記録しました';wf=null;R()}
+function wDel(){delete S.weights[wf.d];save();toast='体重を削除しました(デイリーも解除)';wf=null;R()}
+function wView(){const ex=S.weights[wf.d]!=null,v=parseFloat(wf.v);
+ return`<div style='${OV}' onclick="wf=null;R()"><div class='card' style='width:100%;max-width:340px;margin:0;background:var(--card)' onclick='event.stopPropagation()'><h2>⚖️ 体重(${wf.d})</h2><input style='${INS}' inputmode='decimal' placeholder='例: 48.5' value="${esc(wf.v)}" oninput="wf.v=this.value;$('#bmi').textContent=parseFloat(this.value)>0?(parseFloat(this.value)/BM2).toFixed(1):'-'"><p class='mut'>BMI(身長154cm): <b id='bmi'>${v>0?(v/BM2).toFixed(1):'-'}</b></p>${wf.m?`<p class='ng'>${esc(wf.m)}</p>`:''}<div class='row'><button class='line' onclick="wf=null;R()">やめる</button><button onclick='wSave()'>保存</button></div>${ex?`<button class='line' style='width:100%;margin-top:8px' onclick='wDel()'>この日の体重を削除</button>`:''}<p class='mut' style='margin:8px 0 0'>保存するとデイリー「体重」が達成になります</p></div></div>`}
+function selW(){if(!sel)return'';const v=S.weights[sel];return`<div class='card'><h2>⚖️ ${sel}の体重</h2><p style='margin:0 0 8px'>${v!=null?'<b>'+v+'kg</b> / BMI '+(v/BM2).toFixed(1):'<span class="mut">記録なし</span>'}</p><button class='sub' style='width:100%' onclick="wOpen('${sel}')">${v!=null?'編集・削除':'体重を記録'}</button></div>`}
+function wCard(){const[y,m]=cm.split('-').map(Number),dm=new Date(y,m,0).getDate(),W=340,H=190,L=34,Rt=34,T=12,B=22,pw=W-L-Rt,ph=H-T-B;
+ const X=d=>L+pw*(d-1)/Math.max(dm-1,1),Y=v=>T+ph*(1-(Math.min(60,Math.max(40,v))-40)/20);let g='';
+ for(let v=40;v<=60;v+=5){const yy=Y(v);g+=`<line x1='${L}' x2='${W-Rt}' y1='${yy}' y2='${yy}' style='stroke:var(--bd)'/><text x='${L-4}' y='${yy+3}' font-size='9' text-anchor='end' style='fill:var(--mut)'>${v}</text><text x='${W-Rt+4}' y='${yy+3}' font-size='9' style='fill:var(--mut)'>${(v/BM2).toFixed(1)}</text>`}
+ [1,5,10,15,20,25,dm].forEach(d=>{g+=`<text x='${X(d)}' y='${H-6}' font-size='9' text-anchor='middle' style='fill:var(--mut)'>${d}</text>`});
+ g+=`<text x='${L}' y='9' font-size='9' style='fill:var(--mut)'>kg</text><text x='${W-Rt}' y='9' font-size='9' text-anchor='end' style='fill:var(--mut)'>BMI</text>`;
+ let pth='',pr=false,dots='';
+ for(let d=1;d<=dm;d++){const k=cm+'-'+p2(d),v=S.weights[k];if(v==null){pr=false;continue}
+  const x=X(d).toFixed(1),yy=Y(v).toFixed(1);pth+=(pr?'L':'M')+x+' '+yy;pr=true;
+  dots+=`<circle cx='${x}' cy='${yy}' r='3.5' style='fill:var(--pk);stroke:${wsel===k?'var(--tx)':'none'}'/><circle cx='${x}' cy='${yy}' r='11' fill='transparent' onclick="wsel='${k}';R()"/>`}
+ const v=wsel&&wsel.startsWith(cm)?S.weights[wsel]:null;
+ return`<div class='card'><h2>📈 体重とBMI(${m}月)</h2><svg viewBox='0 0 ${W} ${H}' style='width:100%;display:block'>${g}<path d='${pth}' fill='none' stroke-width='2' style='stroke:var(--pk)'/>${dots}</svg><p class='mut' style='margin:6px 0 0'>${v!=null?`<b>${wsel}</b> : ${v}kg / BMI ${(v/BM2).toFixed(1)}`:'点をタップすると日付・体重・BMIが出ます。記録のない日は空欄で、点は結びません。40〜60kgの外は端に表示します。'}</p></div>`}
+function unCard(){const un=Object.entries(S.owned).filter(([i,x])=>!x.img&&x.src!=='shop');
+ return`<div class='card'><h2>🖼 画像がまだのアイテム(${un.length})</h2>${un.length?`<button class='gr' style='width:100%' onclick='copyUn()'>画像がまだのアイテムをコピー</button><p id='cm' class='mut'></p>`:'<p class="mut" style="margin:0">なし</p>'}</div>`}
+function detailView(){if(!ci||!S.owned[ci])return'';const x=S.owned[ci],i=ci;
+ return`<div style='${OV};z-index:18' onclick="ci=null;R()"><div class='card' style='width:100%;max-width:360px;margin:0;background:var(--card)' onclick='event.stopPropagation()'>${x.img&&IMG[i]?`<img src='${IMG[i]}' onclick="zid='${i}';R()" style='width:100%;max-height:44vh;object-fit:contain;border-radius:14px;background:#fff'>`:`<div style='height:110px;border-radius:14px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--mut)'>🎀 画像なし</div>`}<h2 style='margin:10px 0 4px'>${esc(x.n)}</h2><div class='mut'>ID: ${i}<br>ジャンル: ${GEN[x.g]}<br>所持数: ×${x.c}<br>入手元: ${x.src==='shop'?'ショップ':'ガチャ'}</div><div class='row' style='margin-top:10px'><button class='sub' onclick="pick1('${i}')">${x.img?'画像を変更':'画像を登録'}</button>${x.img?`<button class='line' onclick="delImg('${i}')">削除</button>`:''}<button onclick="ci=null;R()">閉じる</button></div></div></div>`}
+function colView(){const o=Object.entries(S.owned).filter(([i,x])=>cf==='all'||x.g===cf).sort((a,b)=>a[0]<b[0]?-1:1);
+ const ft=FT.map(a=>`<button class='${cf===a[0]?'':'line'}' style='padding:6px 10px;min-height:36px;font-size:13px;flex:none' onclick="cf='${a[0]}';R()">${a[1]}</button>`).join('');
+ let h=`<h1>📚 持ち物</h1><div style='display:flex;gap:6px;overflow-x:auto;margin-bottom:10px'>${ft}</div>`;
+ h+=o.length?`<div style='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px'>${o.map(([i,x])=>`<div style='position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;background:var(--card);border:2px solid var(--bd)' onclick="ci='${i}';R()">${x.img&&IMG[i]?`<img src='${IMG[i]}' style='width:100%;height:100%;object-fit:cover'>`:`<div style='height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--mut)'>🎀</div>`}${x.c>1?`<span style='position:absolute;right:3px;bottom:3px;background:var(--cardt);border-radius:8px;padding:0 5px;font-size:11px;font-weight:700'>×${x.c}</span>`:''}</div>`).join('')}</div>`:`<div class='card mut'>該当するアイテムがありません</div>`;
+ if(cf==='ch')h+=`<div class='card'>${missing()}</div>`;
+ return h+unCard()+bulkCard()+unmView()+listCard()+detailView()+zoomView()}
+function resetView(){return`<div style='${OV};z-index:50' onclick="rsf=false;R()"><div class='card' style='width:100%;max-width:340px;margin:0;background:var(--card)' onclick='event.stopPropagation()'><h2>本当に初期化しますか?</h2><p style='margin:0 0 8px'>運動記録、お給料、ポイント、ガチャ券、ログイン、ミッション、体重、持ち物、ショップ商品、支出、すべての画像(マイルーム背景含む)を消して、残高0から始めます。<b class='ng'>元に戻せません。</b></p><p class='mut'>必要なら、先に「保存」タブでゲームデータと画像のバックアップを取ってください。</p><div class='row'><button class='line' onclick="rsf=false;R()">やめる</button><button onclick='doReset()'>初期化する</button></div></div></div>`}
+async function doReset(){try{if(db)await new Promise((res,rej)=>{const t=db.transaction('i','readwrite');t.objectStore('i').clear();t.oncomplete=res;t.onerror=()=>rej(t.error)})}catch(e){}
+ IMG={};unm=[];unmSel=[];unmNm=[];bp=null;restoreData=null;sel=null;wf=null;wsel=null;cf='all';ci=null;zid=null;
+ S={v:1,gen:2,records:{},spend:{yen:0,pt:0,tickets:0},tickets:0,lastBackup:null,login:{dates:[]},owned:{},shop:{products:{},seq:0},rooms:{list:[],seq:0,sel:null},weights:{},daily:{}};norm();save();rsf=false;tab='home';toast='初期化しました。残高0から始めます';R()}
+function shift(n){const[y,m]=cm.split('-').map(Number);cm=ymd(new Date(y,m-1+n,1)).slice(0,7);sel=null;R()}
+function cal(c){const[y,m]=cm.split('-').map(Number),f=new Date(y,m-1,1).getDay(),dm=new Date(y,m,0).getDate();
+ let g=['日','月','火','水','木','金','土'].map(w=>`<b>${w}</b>`).join('');
+ for(let i=0;i<f;i++)g+='<i></i>';
+ for(let d=1;d<=dm;d++){const k=cm+'-'+String(d).padStart(2,'0'),x=c.days[k];
+  g+=`<button class="d ${x?x.gym?'g':'o':''} ${k===sel?'s':''}" onclick="sel='${k}';R()">${d}</button>`}
+ let det='';
+ if(sel){const x=c.days[sel];det=`<div class="card"><h2>${sel}</h2>`;
+  if(!x)det+='<p class="mut">この日の記録はありません。</p>';
+  else{det+=`<p>${x.gym?'ジムの日(今月'+x.n+'回目)':'ジム以外の運動'}<br>お給料 +${yen(x.yen)} / 運動ポイント +${pts(x.pt)}<br>デイリー +${pts(x.mpt)}</p>`;
+   for(const r of x.recs)det+=`<div class="rec">${r.activities.map(a=>esc(a.name||'運動')+' '+a.minutes+'分(METs '+a.mets+')').join('<br>')}<div class="row" style="margin-top:6px"><button class="line" onclick="edit('${esc(r.id).replace(/'/g,'')}')">編集</button><button class="line" onclick="del('${esc(r.id).replace(/'/g,'')}')">削除</button></div></div>`}
+  det+='</div>'}
+ return`<div class="card"><div class="row" style="align-items:center"><button class="line" onclick="shift(-1)">◀</button><h2 style="text-align:center;margin:0">${y}年${m}月</h2><button class="line" onclick="shift(1)">▶</button></div><div class="grid" style="margin-top:10px">${g}</div><div class="leg"><span><i class="dot" style="background:var(--pk)"></i>ジムの日</span><span><i class="dot" style="background:var(--bl)"></i>ジム以外</span></div></div>${det}${selW()}${wCard()}`}
+function backupTxt(){const c=calc(S.records),dm={};for(const k in c.days)dm[k]={min:c.days[k].min,pt:c.days[k].mpt};return JSON.stringify({...S,missions:{daily:dm,weekly:Object.fromEntries(Object.entries(c.weeks).map(([k,w])=>[k,{gymDays:w.gym,exerciseDays:w.ex,pt:w.pt,tickets:w.tk}]))}})}
+async function copyBk(){const t=$('#bk');t.select();let ok=false;try{await navigator.clipboard.writeText(t.value);ok=true}catch(e){try{ok=document.execCommand('copy')}catch(e2){}}
+ if(ok){S.lastBackup=ymd(now);save()}msgTxt=ok?'コピーしました。メモアプリなどに貼り付けて保存してください。':'自動コピーできませんでした。枠の文字を長押しして全選択→コピーしてください。';$('#bm').textContent=msgTxt}
+function prevRestore(){let j;try{j=JSON.parse($('#rs').value)}catch(e){return $('#rp').innerHTML='<p class="ng">バックアップの形式が正しくありません。</p>'}
+ if(!j||j.v!==1||typeof j.records!=='object')return $('#rp').innerHTML='<p class="ng">このアプリのバックアップではありません。</p>';
+ restoreData=j;j.login=j.login&&j.login.dates?j.login:{dates:[]};j.spend=j.spend||{yen:0,pt:0};j.spend.tickets=j.spend.tickets||0;j.tickets=j.tickets||0;j.weights=j.weights||{};j.daily=j.daily||{};const sv=S;S=j;let c;try{c=calc(j.records)}finally{S=sv}$('#rp').innerHTML=`<p>運動記録 ${Object.keys(j.records).length}件 / ログイン ${((j.login&&j.login.dates)||[]).length}回 / お給料 ${yen(c.yen)}(購入分を引いた残高)<br>ショップ商品 ${Object.keys((j.shop&&j.shop.products)||{}).length}件 / 持ち物 ${Object.keys(j.owned||{}).length}種${j.gen===2?'':'<br><b class="ng">⚠️ 旧ポイント制度のバックアップです。復元すると、獲得ポイントなどが新制度で計算し直されます。</b>'}<br class="mut"><span class="mut">※今のデータは上書きされます</span></p><button onclick="doRestore()">この内容で復元する</button>`}
+function doRestore(){if(!restoreData)return;S=restoreData;restoreData=null;norm();recon();save();toast='復元しました!';tab='home';R()}
+function R(){
+ const c=calc(S.records);let h=bgLayer(c);if(loadErr)h+='<div class="warn">⚠️ '+esc(loadErr)+'</div>';
+ if(!stOK)h+='<div class="warn">⚠️ このブラウザでは保存できません。記録が消えるので、こまめにバックアップを取ってください。</div>';
+ if(toast){h+=`<div class="toast">${esc(toast)}</div>`;toast=''}
+ if(tab==='home'){const m=c.month[ymd(now).slice(0,7)]||0;
+  const old=!S.lastBackup||(now-new Date(S.lastBackup))/864e5>=7;
+  if(old&&Object.keys(S.records).length)h+='<div class="warn">💾 バックアップが1週間以上前(または未実施)です。「バックアップ」タブでコピーして保存しましょう。</div>';
+  h+=`<h1>🏋️ ジム習慣ゲーム</h1><div class="mny"><div class="card"><div class="mut">お給料</div><div class="big">${yen(c.yen)}</div></div><div class="row"><div class="card"><div class="mut">ガチャポイント</div><div class="big" style="font-size:22px">${pts(c.pt)}</div></div><div class="card"><div class="mut">ガチャ券</div><div class="big" style="font-size:22px">${c.tickets}枚</div></div></div><div class="card"><div class="mut">今月のジム来館</div><div class="big">${m}回</div></div></div>${curBg()?'':loginCard()+dailyRow()}${weeklyCard(c)}<div class="row" style="margin-bottom:12px"><button class="sub" onclick="tab='gacha';R()">🎰 ガチャ</button><button class="gr" onclick="tab='col';R()">📚 持ち物</button></div><button style="width:100%" onclick="tab='imp';R()">運動記録を取り込む</button>${curBg()?'':`<button class='line' style='width:100%;margin-top:10px' onclick='rpOpen()'>🖼 マイルーム背景を設定</button>`}`}
+ else if(tab==='cal')h+='<h1>📅 運動カレンダー</h1>'+cal(c);
+ else if(tab==='imp'){h+=`<h1>📥 運動記録の取り込み</h1><div class="card"><p class="mut" style="margin-top:0">チャッピーが作ったデータをここに貼り付けてプレビューを押してください。同じ id は二重に加算されません。</p><textarea id="imp" placeholder="ここに貼り付け"></textarea><div class="row" style="margin-top:8px"><button class="sub" onclick="$('#imp').value=sample()">サンプル</button><button onclick="doPrev()">プレビュー</button></div></div><div id="pv"></div>`}
+ else if(tab==='shop')h+=shopView(c);else if(tab==='gacha')h+=gachaView(c);else if(tab==='col')h+=colView();else{h+=`<h1>💾 バックアップ</h1><div class="card"><h2>保存する</h2><p class="mut" style="margin-top:0">下の文字をすべてコピーして、メモアプリやファイルアプリに保存します。最終バックアップ: ${S.lastBackup||'まだありません'}</p><textarea id="bk" readonly>${esc(backupTxt())}</textarea><button style="width:100%;margin-top:8px" onclick="copyBk()">コピーする</button><p id="bm" class="mut"></p></div><div class="card"><h2>復元する</h2><textarea id="rs" placeholder="保存したバックアップを貼り付け"></textarea><button class="sub" style="width:100%;margin-top:8px" onclick="prevRestore()">内容を確認</button><div id="rp"></div></div><div class="card"><h2>🖼 画像のバックアップ</h2><p class="mut" style="margin-top:0">画像はゲームデータとは別に保存します(文字が長くなるため)。いま ${Object.keys(IMG).length}枚 / 約${Math.round(Object.values(IMG).reduce((s,v)=>s+v.length,0)/1024)}KB</p><button style="width:100%" onclick="copyImg()">画像バックアップをコピー</button><p id="ib" class="mut"></p><textarea id="ir" placeholder="画像バックアップを貼り付け"></textarea><button class="sub" style="width:100%;margin-top:8px" onclick="restoreImg()">画像を復元(追加・上書き)</button><p id="ip" class="mut"></p></div><div class="card"><h2>🎀 ガチャのバナー画像</h2><p class="mut" style="margin-top:0">ガチャ画面の上に出る画像を、この端末だけに登録できます。未登録のときは文字の見出しになります。</p><div class="row"><button class="sub" onclick="bnT='ch';$('#fb').click()">キャラ用を選ぶ</button><button class="sub" onclick="bnT='it';$('#fb').click()">アイテム用を選ぶ</button></div><button class="line" style="width:100%;margin-top:8px" onclick="bnDel()">登録したバナーを外す</button></div><div class="card"><h2>🧹 全データリセット</h2><p class="mut" style="margin-top:0">運動記録・残高・持ち物・画像・ショップ・体重などをすべて消して最初から始めます。このボタンを押したときだけ実行されます。</p><button class="line" style="width:100%" onclick="rsf=true;R()">リセットする…</button></div><div class="card mut">⚠️ データはこのブラウザの中に保存されます。ブラウザの履歴・サイトデータの削除、別の端末への移動、プライベートブラウズでは消えます。週1回のバックアップがおすすめです。</div>`}
+ if(tab==='home')h=h.replace(/<h1>[^<]*<\/h1>/,'');if(rp||rz||rdel)h+=roomView();if(wf)h+=wView();if(rsf)h+=resetView();$('#app').innerHTML=h;const hb=!!curBg();document.body.classList.toggle('bgm',tab==='home'&&hb);document.body.classList.toggle('bgs',tab!=='home'&&hb);
+ $('#nav').innerHTML=[['home','🏠','ホーム'],['cal','📅','予定'],['imp','📥','取込'],['gacha','🎰','ガチャ'],['shop','🛍','ショップ'],['col','📚','持ち物'],['bk','💾','保存']].map(t=>`<button class="${tab===t[0]?'on':''}" onclick="pending=null;tab='${t[0]}';R();scrollTo(0,0)">${t[1]}<br>${t[2]}</button>`).join('')}
+load();idb().then(()=>idbAll()).then(o=>{IMG=o||{};recon();R()});R();document.addEventListener('visibilitychange',()=>{if(!document.hidden){const n=new Date();if(ymd(n)!==ymd(now)){now=n;cm=ymd(now).slice(0,7);R()}}});
+</script></body></html>
